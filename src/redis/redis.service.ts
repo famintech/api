@@ -13,17 +13,18 @@ export class RedisService {
 
   async setValue(key: string, value: string): Promise<void> {
     this.logger.log(`Attempting to set key: ${key}`);
+    this.logger.log(`Redis client config: ${JSON.stringify(this.redisClient)}`);
     try {
       await this.redisClient.send({ cmd: 'set' }, { key, value })
         .pipe(
-          timeout(5000),
+          timeout(10000), // Increase timeout to 10 seconds
           catchError(error => {
             if (error instanceof TimeoutError) {
               this.logger.error(`Timeout while setting key: ${key}`);
             } else {
               this.logger.error(`Error setting key: ${key}`, error.stack);
             }
-            return throwError(error);
+            return throwError(() => error);
           })
         )
         .toPromise();

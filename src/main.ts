@@ -1,16 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Logger } from '@nestjs/common';
+import { createClient } from 'redis';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
+  const logger = new Logger('Bootstrap');
+
+  // Redis health check
+  const redisClient = createClient({
+    url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+  });
   
-  app.useGlobalPipes(new ValidationPipe());
-  
-  const port = configService.get<number>('port');
-  await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
+  try {
+    await redisClient.connect();
+    logger.log('Successfully connected to Redis');
+    await redisClient.disconnect();
+  } catch (error) {
+    logger.error('Failed to connect to Redis', error);
+  }
+
+  await app.listen(3000);
+  logger.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();

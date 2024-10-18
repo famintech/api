@@ -15,6 +15,8 @@ import { RedisController } from './controllers/redis.controller';
           options: {
             host: configService.get('REDIS_HOST'),
             port: configService.get('REDIS_PORT'),
+            retryAttempts: 5,
+            retryDelay: 1000,
           },
         }),
         inject: [ConfigService],

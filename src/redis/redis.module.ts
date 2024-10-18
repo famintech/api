@@ -1,30 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ConfigModule } from '@nestjs/config';
 import { RedisService } from './redis.service';
 import { RedisController } from './controllers/redis.controller';
 
 @Module({
-  imports: [
-    ClientsModule.registerAsync([
-      {
-        name: 'REDIS_CLIENT',
-        imports: [ConfigModule],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.REDIS,
-          options: {
-            host: configService.get('REDIS_HOST'),
-            port: configService.get('REDIS_PORT'),
-            retryAttempts: 5,
-            retryDelay: 1000,
-          },
-        }),
-        inject: [ConfigService],
-      },
-    ]),
-  ],
+  imports: [ConfigModule],
   providers: [RedisService],
   exports: [RedisService],
-  controllers: [RedisController], 
+  controllers: [RedisController],
 })
 export class RedisModule {}

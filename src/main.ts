@@ -1,21 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
-import { createClient } from 'redis';
+import { RedisService } from './redis/redis.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
 
-  // Redis health check
-  const redisClient = createClient({
-    url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
-  });
-  
+  const redisService = app.get(RedisService);
+
   try {
-    await redisClient.connect();
+    await redisService.setValue('health_check', 'ok');
     logger.log('Successfully connected to Redis');
-    await redisClient.disconnect();
   } catch (error) {
     logger.error('Failed to connect to Redis', error);
   }

@@ -1,33 +1,38 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { timeout, catchError } from 'rxjs/operators';
-import { TimeoutError, throwError } from 'rxjs';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import Redis from 'ioredis';
 
 @Injectable()
 export class RedisService {
   private readonly logger = new Logger(RedisService.name);
+  private readonly redisClient: Redis;
 
-  constructor(
-    @Inject('REDIS_CLIENT') private readonly redisClient: ClientProxy,
-  ) {}
+  constructor(private configService: ConfigService) {
+    this.redisClient = new Redis({
+      host: this.configService.get('REDIS_HOST'),
+      port: this.configService.get('REDIS_PORT'),
+      retryStrategy: (times) => {
+        if (times > 3) {
+          this.logger.error(`Redis connection failed after ${times} attempts`);
+          return null; // stop retrying
+        }
+        return Math.min(times * 1000, 3000); // wait for 1s, 2s, 3s
+      },
+    });
+
+    this.redisClient.on('error', (error) => {
+      this.logger.error('Redis connection error', error);
+    });
+
+    this.redisClient.on('connect', () => {
+      this.logger.log('Successfully connected to Redis');
+    });
+  }
 
   async setValue(key: string, value: string): Promise<void> {
     this.logger.log(`Attempting to set key: ${key}`);
-    this.logger.log(`Redis client config: ${JSON.stringify(this.redisClient)}`);
     try {
-      await this.redisClient.send({ cmd: 'set' }, { key, value })
-        .pipe(
-          timeout(10000), // Increase timeout to 10 seconds
-          catchError(error => {
-            if (error instanceof TimeoutError) {
-              this.logger.error(`Timeout while setting key: ${key}`);
-            } else {
-              this.logger.error(`Error setting key: ${key}`, error.stack);
-            }
-            return throwError(() => error);
-          })
-        )
-        .toPromise();
+      await this.redisClient.set(key, value);
       this.logger.log(`Successfully set key: ${key}`);
     } catch (error) {
       this.logger.error(`Failed to set key: ${key}`, error.stack);
@@ -38,19 +43,7 @@ export class RedisService {
   async getValue(key: string): Promise<string | null> {
     this.logger.log(`Attempting to get key: ${key}`);
     try {
-      const value = await this.redisClient.send({ cmd: 'get' }, key)
-        .pipe(
-          timeout(5000),
-          catchError(error => {
-            if (error instanceof TimeoutError) {
-              this.logger.error(`Timeout while getting key: ${key}`);
-            } else {
-              this.logger.error(`Error getting key: ${key}`, error.stack);
-            }
-            return throwError(error);
-          })
-        )
-        .toPromise();
+      const value = await this.redisClient.get(key);
       this.logger.log(`Successfully got key: ${key}, value: ${value}`);
       return value;
     } catch (error) {

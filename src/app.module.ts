@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
+import { PrismaService } from '../prisma/services/prisma.service';
 import { RedisModule } from './redis/redis.module';
 import configuration from './config/configuration';
 import { WebsocketModule } from './websocket/websocket.module';
@@ -27,5 +28,6 @@ import { WebsocketModule } from './websocket/websocket.module';
     PermissionsModule,
     WebsocketModule,
   ],
+  providers: [PrismaService],
 })
 export class AppModule {}

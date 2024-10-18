@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma/services/prisma.service';
 import { RedisModule } from './redis/redis.module';
 import configuration from './config/configuration';
 import { WebsocketModule } from './websocket/websocket.module';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { WebsocketModule } from './websocket/websocket.module';
     RolesModule,
     PermissionsModule,
     WebsocketModule,
+    PrismaModule,
   ],
-  providers: [PrismaService],
 })
 export class AppModule {}

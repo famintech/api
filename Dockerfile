@@ -14,6 +14,9 @@ COPY . .
 # Build the app
 RUN yarn build
 
+# Generate Prisma Client
+RUN yarn prisma:generate
+
 # Expose the port the app runs on
 EXPOSE 3000
 

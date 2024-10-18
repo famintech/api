@@ -25,7 +25,7 @@ import { WebsocketModule } from './websocket/websocket.module';
     UsersModule,
     RolesModule,
     PermissionsModule,
-    WebsocketModule
+    WebsocketModule,
   ],
 })
 export class AppModule {}

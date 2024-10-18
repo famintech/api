@@ -7,6 +7,7 @@ import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { RedisModule } from './redis/redis.module';
 import configuration from './config/configuration';
+import { WebsocketModule } from './websocket/websocket.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import configuration from './config/configuration';
     AuthModule,
     UsersModule,
     RolesModule,
-    PermissionsModule
+    PermissionsModule,
+    WebsocketModule
   ],
 })
 export class AppModule {}

@@ -73,23 +73,25 @@ export class AuthService {
     if (!user) {
       throw new BadRequestException('User not found');
     }
-
+  
     const resetToken = uuidv4();
     const passwordResetExpires = new Date(Date.now() + 3600000); // 1 hour from now
-
+  
     await this.prisma.user.update({
       where: { id: user.id },
       data: { passwordResetToken: resetToken, passwordResetExpires },
     });
-
+  
+    const resetLink = `https://siren.famin.cloud/reset-password/${resetToken}`;
+  
     await this.mailerService.sendMail({
-        to: user.email,
-        subject: 'Password Reset',
-        template: './password-reset',
-        context: {
-          resetLink: `https://siren.famin.cloud/reset-password/${resetToken}`,
-        },
-      });
+      to: user.email,
+      subject: 'Password Reset',
+      template: './password-reset',
+      context: {
+        resetLink,
+      },
+    });
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {

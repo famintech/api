@@ -85,7 +85,7 @@ export class AuthService {
     await this.mailerService.sendMail({
         to: user.email,
         subject: 'Password Reset',
-        template: './password-reset',
+        template: '../mailer/templates/password-reset',
         context: {
           resetLink: `https://siren.famin.cloud/reset-password/${resetToken}`,
         },

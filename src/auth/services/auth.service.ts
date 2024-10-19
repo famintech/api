@@ -100,9 +100,7 @@ export class AuthService {
       console.log('Email sent successfully', result);
     } catch (error) {
       console.error('Error sending email:', error);
-      if (error.response) {
-        console.error('Error response:', error.response);
-      }
+      console.error('Error details:', JSON.stringify(error, null, 2));
       throw new Error('Failed to send password reset email');
     }
   }

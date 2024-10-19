@@ -84,14 +84,19 @@ export class AuthService {
   
     const resetLink = `https://siren.famin.cloud/reset-password/${resetToken}`;
   
-    await this.mailerService.sendMail({
-      to: user.email,
-      subject: 'Password Reset',
-      template: './password-reset',
-      context: {
-        resetLink,
-      },
-    });
+    try {
+      await this.mailerService.sendMail({
+        to: user.email,
+        subject: 'Password Reset',
+        template: './password-reset',
+        context: {
+          resetLink,
+        },
+      });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      throw new Error('Failed to send password reset email');
+    }
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {

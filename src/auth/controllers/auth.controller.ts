@@ -28,4 +28,19 @@ export class AuthController {
     await this.authService.revokeRefreshToken(refreshToken);
     return { message: 'Logout successful' };
   }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    await this.authService.createPasswordResetToken(email);
+    return { message: 'Password reset email sent' };
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body('token') token: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    await this.authService.resetPassword(token, newPassword);
+    return { message: 'Password reset successful' };
+  }
 }

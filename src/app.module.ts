@@ -10,6 +10,8 @@ import { RedisModule } from './redis/redis.module';
 import configuration from './config/configuration';
 import { WebsocketModule } from './websocket/websocket.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
 
 @Module({
   imports: [
@@ -20,6 +22,30 @@ import { PrismaModule } from '../prisma/prisma.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => configService.get('database'),
+      inject: [ConfigService],
+    }),
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        transport: {
+          host: configService.get('MAIL_HOST'),
+          port: configService.get('MAIL_PORT'),
+          auth: {
+            user: configService.get('MAIL_USER'),
+            pass: configService.get('MAIL_PASS'),
+          },
+        },
+        defaults: {
+          from: '"No Reply" <noreply@example.com>',
+        },
+        template: {
+          dir: process.cwd() + '/templates/',
+          adapter: new EjsAdapter(),
+          options: {
+            strict: true,
+          },
+        },
+      }),
       inject: [ConfigService],
     }),
     RedisModule,

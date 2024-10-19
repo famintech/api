@@ -44,7 +44,7 @@ model Role {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   users       User[]
-  permissions Permission[]
+  permissions RolePermission[]
 
   @@index([name])
 }
@@ -55,7 +55,17 @@ model Permission {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  roles       Role[]
+  roles       RolePermission[]
 
   @@index([name])
+}
+
+model RolePermission {
+  role        Role       @relation(fields: [roleId], references: [id])
+  roleId      String
+  permission  Permission @relation(fields: [permissionId], references: [id])
+  permissionId String
+  assignedAt  DateTime   @default(now())
+
+  @@id([roleId, permissionId])
 }

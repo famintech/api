@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/services/prisma.service';
 import { CreatePermissionDto } from '../dto/create-permission.dto';
 import { UpdatePermissionDto } from '../dto/update-permission.dto';
@@ -53,31 +53,32 @@ export class PermissionsService {
 
   async addPermissionToRole(permissionId: string, roleId: string) {
     try {
-      return await this.prisma.permission.update({
-        where: { id: permissionId },
+      return await this.prisma.rolePermission.create({
         data: {
-          roles: {
-            connect: { id: roleId },
-          },
+          roleId,
+          permissionId,
         },
       });
     } catch (error) {
+      if (error.code === 'P2002') {
+        throw new ConflictException('Permission is already assigned to this role');
+      }
       throw new NotFoundException('Permission or Role not found');
     }
   }
-
+  
   async removePermissionFromRole(permissionId: string, roleId: string) {
     try {
-      return await this.prisma.permission.update({
-        where: { id: permissionId },
-        data: {
-          roles: {
-            disconnect: { id: roleId },
+      return await this.prisma.rolePermission.delete({
+        where: {
+          roleId_permissionId: {
+            roleId,
+            permissionId,
           },
         },
       });
     } catch (error) {
-      throw new NotFoundException('Permission or Role not found');
+      throw new NotFoundException('Permission is not assigned to this role');
     }
   }
 }

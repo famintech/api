@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/services/prisma.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
@@ -8,9 +8,16 @@ export class RolesService {
   constructor(private prisma: PrismaService) {}
 
   async create(createRoleDto: CreateRoleDto) {
-    return this.prisma.role.create({
-      data: createRoleDto,
-    });
+    try {
+      return await this.prisma.role.create({
+        data: createRoleDto,
+      });
+    } catch (error) {
+      if (error.code === 'P2002') {
+        throw new ConflictException(`Role with name "${createRoleDto.name}" already exists`);
+      }
+      throw error;
+    }
   }
 
   async findAll() {
@@ -83,31 +90,32 @@ export class RolesService {
 
   async addPermissionToRole(permissionId: string, roleId: string) {
     try {
-      return await this.prisma.role.update({
-        where: { id: roleId },
+      return await this.prisma.rolePermission.create({
         data: {
-          permissions: {
-            connect: { id: permissionId },
-          },
+          roleId,
+          permissionId,
         },
       });
     } catch (error) {
+      if (error.code === 'P2002') {
+        throw new ConflictException('Permission is already assigned to this role');
+      }
       throw new NotFoundException('Permission or Role not found');
     }
   }
 
   async removePermissionFromRole(permissionId: string, roleId: string) {
     try {
-      return await this.prisma.role.update({
-        where: { id: roleId },
-        data: {
-          permissions: {
-            disconnect: { id: permissionId },
+      return await this.prisma.rolePermission.delete({
+        where: {
+          roleId_permissionId: {
+            roleId,
+            permissionId,
           },
         },
       });
     } catch (error) {
-      throw new NotFoundException('Permission or Role not found');
+      throw new NotFoundException('Permission is not assigned to this role');
     }
   }
 }

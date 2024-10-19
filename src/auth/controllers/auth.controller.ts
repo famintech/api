@@ -68,12 +68,12 @@ export class AuthController {
     return { message: 'Two-factor authentication disabled' };
   }
 
-  @UseGuards(AuthGuard('jwt'))
   @Post('2fa/verify')
-  async verifyTwoFactor(@Request() req, @Body('token') token: string) {
-    const isValid = await this.authService.verifyTwoFactorToken(req.user.userId, token);
+  async verifyTwoFactor(@Body('userId') userId: string, @Body('token') token: string) {
+    const isValid = await this.authService.verifyTwoFactorToken(userId, token);
     if (isValid) {
-      return { message: 'Token is valid' };
+      const user = await this.authService.findUserById(userId);
+      return this.authService.generateTokens(user);
     }
     throw new UnauthorizedException('Invalid token');
   }

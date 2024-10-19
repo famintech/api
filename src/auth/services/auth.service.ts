@@ -27,10 +27,6 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { email: user.email, sub: user.id };
-    const accessToken = this.jwtService.sign(payload);
-    const refreshToken = await this.generateRefreshToken(user.id);
-  
     if (user.isTwoFactorEnabled) {
       return {
         requiresTwoFactor: true,
@@ -38,10 +34,22 @@ export class AuthService {
       };
     }
   
+    return this.generateTokens(user);
+  }
+  
+  public async generateTokens(user: any) {
+    const payload = { email: user.email, sub: user.id };
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = await this.generateRefreshToken(user.id);
+  
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
     };
+  }
+
+  async findUserById(userId: string) {
+    return this.prisma.user.findUnique({ where: { id: userId } });
   }
 
   async generateRefreshToken(userId: string): Promise<string> {
@@ -142,7 +150,7 @@ export class AuthService {
   }
 
   async generateTwoFactorSecret(userId: string): Promise<{ secret: string; otpauthUrl: string; qrCode: string }> {
-    const secret = speakeasy.generateSecret({ name: 'Your App Name' });
+    const secret = speakeasy.generateSecret({ name: 'siren' });
     const otpauthUrl = secret.otpauth_url;
     const qrCode = await qrcode.toDataURL(otpauthUrl);
   

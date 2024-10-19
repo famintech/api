@@ -30,6 +30,7 @@ import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
         transport: {
           host: configService.get('MAIL_HOST'),
           port: configService.get('MAIL_PORT'),
+          secure: false,
           auth: {
             user: configService.get('MAIL_USER'),
             pass: configService.get('MAIL_PASS'),
@@ -39,7 +40,7 @@ import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
           from: '"No Reply" <noreply@example.com>',
         },
         template: {
-          dir: process.cwd() + '/src/mailer/templates/',
+          dir: __dirname + '/mailer/templates',
           adapter: new EjsAdapter(),
           options: {
             strict: true,

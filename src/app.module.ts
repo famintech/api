@@ -39,7 +39,7 @@ import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
           from: '"No Reply" <noreply@example.com>',
         },
         template: {
-          dir: process.cwd() + '/templates/',
+          dir: process.cwd() + '/src/mailer/templates/',
           adapter: new EjsAdapter(),
           options: {
             strict: true,

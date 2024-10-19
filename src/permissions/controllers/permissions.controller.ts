@@ -33,4 +33,14 @@ export class PermissionsController {
   remove(@Param('id') id: string) {
     return this.permissionsService.remove(id);
   }
+
+  @Post(':permissionId/roles/:roleId')
+  addPermissionToRole(@Param('permissionId') permissionId: string, @Param('roleId') roleId: string) {
+    return this.permissionsService.addPermissionToRole(permissionId, roleId);
+  }
+
+  @Delete(':permissionId/roles/:roleId')
+  removePermissionFromRole(@Param('permissionId') permissionId: string, @Param('roleId') roleId: string) {
+    return this.permissionsService.removePermissionFromRole(permissionId, roleId);
+  }
 }

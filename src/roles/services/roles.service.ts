@@ -50,4 +50,64 @@ export class RolesService {
       throw new NotFoundException(`Role with ID "${id}" not found`);
     }
   }
+
+  async addUserToRole(userId: string, roleId: string) {
+    try {
+      return await this.prisma.role.update({
+        where: { id: roleId },
+        data: {
+          users: {
+            connect: { id: userId },
+          },
+        },
+      });
+    } catch (error) {
+      throw new NotFoundException('User or Role not found');
+    }
+  }
+
+  async removeUserFromRole(userId: string, roleId: string) {
+    try {
+      return await this.prisma.role.update({
+        where: { id: roleId },
+        data: {
+          users: {
+            disconnect: { id: userId },
+          },
+        },
+      });
+    } catch (error) {
+      throw new NotFoundException('User or Role not found');
+    }
+  }
+
+  async addPermissionToRole(permissionId: string, roleId: string) {
+    try {
+      return await this.prisma.role.update({
+        where: { id: roleId },
+        data: {
+          permissions: {
+            connect: { id: permissionId },
+          },
+        },
+      });
+    } catch (error) {
+      throw new NotFoundException('Permission or Role not found');
+    }
+  }
+
+  async removePermissionFromRole(permissionId: string, roleId: string) {
+    try {
+      return await this.prisma.role.update({
+        where: { id: roleId },
+        data: {
+          permissions: {
+            disconnect: { id: permissionId },
+          },
+        },
+      });
+    } catch (error) {
+      throw new NotFoundException('Permission or Role not found');
+    }
+  }
 }

@@ -50,4 +50,34 @@ export class PermissionsService {
       throw new NotFoundException(`Permission with ID "${id}" not found`);
     }
   }
+
+  async addPermissionToRole(permissionId: string, roleId: string) {
+    try {
+      return await this.prisma.permission.update({
+        where: { id: permissionId },
+        data: {
+          roles: {
+            connect: { id: roleId },
+          },
+        },
+      });
+    } catch (error) {
+      throw new NotFoundException('Permission or Role not found');
+    }
+  }
+
+  async removePermissionFromRole(permissionId: string, roleId: string) {
+    try {
+      return await this.prisma.permission.update({
+        where: { id: permissionId },
+        data: {
+          roles: {
+            disconnect: { id: roleId },
+          },
+        },
+      });
+    } catch (error) {
+      throw new NotFoundException('Permission or Role not found');
+    }
+  }
 }

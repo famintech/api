@@ -84,26 +84,25 @@ export class AuthService {
   
     const resetLink = `https://siren.famin.cloud/reset-password/${resetToken}`;
   
-    console.log('Attempting to send email');
-    console.log('User email:', user.email);
-    console.log('Reset link:', resetLink);
-    console.log('Template directory:', process.cwd() + '/src/mailer/templates');
+    // Send email asynchronously
+    this.sendPasswordResetEmail(user.email, resetLink).catch(error => {
+      console.error('Failed to send password reset email:', error);
+    });
+  }
   
+  private async sendPasswordResetEmail(email: string, resetLink: string): Promise<void> {
     try {
-      const result = await this.mailerService.sendMail({
-        to: user.email,
+      await this.mailerService.sendMail({
+        to: email,
         subject: 'Password Reset',
         template: 'password-reset',
         context: {
-          resetLink: resetLink,
+          resetLink,
         },
       });
-      console.log('Email sent successfully', result);
+      console.log('Password reset email sent successfully');
     } catch (error) {
-      console.error('Error sending email:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-      console.error('Current working directory:', process.cwd());
-      console.error('__dirname:', __dirname);
+      console.error('Error sending password reset email:', error);
       throw new Error('Failed to send password reset email');
     }
   }

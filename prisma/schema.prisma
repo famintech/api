@@ -20,6 +20,7 @@ model User {
   passwordResetExpires DateTime?
   twoFactorSecret    String?
   isTwoFactorEnabled Boolean @default(false)
+  roles Role[]
 
   @@index([email])
   @@index([firstName, lastName])
@@ -34,4 +35,27 @@ model RefreshToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  users       User[]
+  permissions Permission[]
+
+  @@index([name])
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  roles       Role[]
+
+  @@index([name])
 }

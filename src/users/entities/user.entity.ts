@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { Role } from '../../roles/entities/role.entity';
 
 @Entity('users')
 export class User {
@@ -24,4 +25,7 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column('simple-array')
+  roles: Role[];
 }

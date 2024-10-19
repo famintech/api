@@ -83,6 +83,8 @@ export class AuthService {
     });
   
     const resetLink = `https://siren.famin.cloud/reset-password/${resetToken}`;
+
+    console.log(resetLink);
   
     try {
       await this.mailerService.sendMail({

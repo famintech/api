@@ -43,4 +43,38 @@ export class AuthController {
     await this.authService.resetPassword(token, newPassword);
     return { message: 'Password reset successful' };
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('2fa/generate')
+  async generateTwoFactor(@Request() req) {
+    const { secret, otpauthUrl, qrCode } = await this.authService.generateTwoFactorSecret(req.user.userId);
+    return { secret, otpauthUrl, qrCode };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('2fa/enable')
+  async enableTwoFactor(@Request() req, @Body('token') token: string) {
+    const isEnabled = await this.authService.enableTwoFactor(req.user.userId, token);
+    if (isEnabled) {
+      return { message: 'Two-factor authentication enabled' };
+    }
+    throw new UnauthorizedException('Invalid token');
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('2fa/disable')
+  async disableTwoFactor(@Request() req) {
+    await this.authService.disableTwoFactor(req.user.userId);
+    return { message: 'Two-factor authentication disabled' };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('2fa/verify')
+  async verifyTwoFactor(@Request() req, @Body('token') token: string) {
+    const isValid = await this.authService.verifyTwoFactorToken(req.user.userId, token);
+    if (isValid) {
+      return { message: 'Token is valid' };
+    }
+    throw new UnauthorizedException('Invalid token');
+  }
 }

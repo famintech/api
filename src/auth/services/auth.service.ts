@@ -5,6 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { MailerService } from '@nestjs-modules/mailer';
+import * as speakeasy from 'speakeasy';
+import * as qrcode from 'qrcode';
 
 @Injectable()
 export class AuthService {
@@ -28,6 +30,14 @@ export class AuthService {
     const payload = { email: user.email, sub: user.id };
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = await this.generateRefreshToken(user.id);
+  
+    if (user.isTwoFactorEnabled) {
+      return {
+        requiresTwoFactor: true,
+        userId: user.id,
+      };
+    }
+  
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
@@ -128,6 +138,51 @@ export class AuthService {
         passwordResetToken: null,
         passwordResetExpires: null,
       },
+    });
+  }
+
+  async generateTwoFactorSecret(userId: string): Promise<{ secret: string; otpauthUrl: string; qrCode: string }> {
+    const secret = speakeasy.generateSecret({ name: 'Your App Name' });
+    const otpauthUrl = secret.otpauth_url;
+    const qrCode = await qrcode.toDataURL(otpauthUrl);
+  
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { twoFactorSecret: secret.base32 },
+    });
+  
+    return { secret: secret.base32, otpauthUrl, qrCode };
+  }
+  
+  async verifyTwoFactorToken(userId: string, token: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.twoFactorSecret) {
+      return false;
+    }
+  
+    return speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token,
+    });
+  }
+  
+  async enableTwoFactor(userId: string, token: string): Promise<boolean> {
+    const isValid = await this.verifyTwoFactorToken(userId, token);
+    if (isValid) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { isTwoFactorEnabled: true },
+      });
+      return true;
+    }
+    return false;
+  }
+  
+  async disableTwoFactor(userId: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { isTwoFactorEnabled: false, twoFactorSecret: null },
     });
   }
 }

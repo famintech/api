@@ -18,6 +18,8 @@ model User {
   refreshTokens      RefreshToken[]
   passwordResetToken String?        @unique
   passwordResetExpires DateTime?
+  twoFactorSecret    String?
+  isTwoFactorEnabled Boolean @default(false)
 
   @@index([email])
   @@index([firstName, lastName])

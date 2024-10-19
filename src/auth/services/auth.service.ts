@@ -87,6 +87,7 @@ export class AuthService {
     console.log('Attempting to send email');
     console.log('User email:', user.email);
     console.log('Reset link:', resetLink);
+    console.log('Template directory:', process.cwd() + '/src/mailer/templates');
   
     try {
       const result = await this.mailerService.sendMail({
@@ -101,6 +102,8 @@ export class AuthService {
     } catch (error) {
       console.error('Error sending email:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
+      console.error('Current working directory:', process.cwd());
+      console.error('__dirname:', __dirname);
       throw new Error('Failed to send password reset email');
     }
   }

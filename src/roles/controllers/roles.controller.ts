@@ -53,4 +53,19 @@ export class RolesController {
   removePermissionFromRole(@Param('roleId') roleId: string, @Param('permissionId') permissionId: string) {
     return this.rolesService.removePermissionFromRole(permissionId, roleId);
   }
+
+  @Get(':id/inherited-permissions')
+  getInheritedPermissions(@Param('id') id: string) {
+    return this.rolesService.getInheritedPermissions(id);
+  }
+
+  @Post(':roleId/parent/:parentRoleId')
+  setParentRole(@Param('roleId') roleId: string, @Param('parentRoleId') parentRoleId: string) {
+    return this.rolesService.setParentRole(roleId, parentRoleId);
+  }
+
+  @Delete(':roleId/parent')
+  removeParentRole(@Param('roleId') roleId: string) {
+    return this.rolesService.removeParentRole(roleId);
+  }
 }

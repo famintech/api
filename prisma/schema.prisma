@@ -45,6 +45,9 @@ model Role {
   updatedAt   DateTime     @updatedAt
   users       User[]
   permissions RolePermission[]
+  parentRole   Role?    @relation("RoleHierarchy", fields: [parentRoleId], references: [id])
+  parentRoleId String?
+  childRoles   Role[]   @relation("RoleHierarchy")
 
   @@index([name])
 }

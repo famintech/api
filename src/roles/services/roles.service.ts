@@ -118,4 +118,51 @@ export class RolesService {
       throw new NotFoundException('Permission is not assigned to this role');
     }
   }
+
+  async getInheritedPermissions(roleId: string): Promise<string[]> {
+    const role = await this.prisma.role.findUnique({
+      where: { id: roleId },
+      include: {
+        permissions: {
+          select: { permissionId: true },
+        },
+        parentRole: true,
+      },
+    });
+
+    if (!role) {
+      throw new NotFoundException(`Role with ID "${roleId}" not found`);
+    }
+
+    const permissions = role.permissions.map((rp) => rp.permissionId);
+
+    if (role.parentRole) {
+      const parentPermissions = await this.getInheritedPermissions(role.parentRole.id);
+      return [...new Set([...permissions, ...parentPermissions])];
+    }
+
+    return permissions;
+  }
+
+  async setParentRole(roleId: string, parentRoleId: string) {
+    try {
+      return await this.prisma.role.update({
+        where: { id: roleId },
+        data: { parentRoleId },
+      });
+    } catch (error) {
+      throw new NotFoundException('Role or parent role not found');
+    }
+  }
+
+  async removeParentRole(roleId: string) {
+    try {
+      return await this.prisma.role.update({
+        where: { id: roleId },
+        data: { parentRoleId: null },
+      });
+    } catch (error) {
+      throw new NotFoundException(`Role with ID "${roleId}" not found`);
+    }
+  }
 }

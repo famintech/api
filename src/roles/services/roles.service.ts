@@ -102,7 +102,25 @@ export class RolesService {
           permissionId,
         },
       });
+      
+      // Invalidate the role's permissions cache
       await this.permissionCacheService.invalidateRolePermissions(roleId);
+      
+      // Update the cache for all users with this role
+      const usersWithRole = await this.prisma.user.findMany({
+        where: {
+          roles: {
+            some: {
+              id: roleId,
+            },
+          },
+        },
+      });
+      
+      for (const user of usersWithRole) {
+        await this.updateUserPermissionsCache(user.id);
+      }
+      
       return result;
     } catch (error) {
       if (error.code === 'P2002') {

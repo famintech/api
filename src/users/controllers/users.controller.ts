@@ -29,4 +29,16 @@ export class UsersController {
     await this.permissionCacheService.cacheUserPermissions(id, permissions);
     return permissions;
   }
+
+  @Get(':id/cached-permissions')
+  async getCachedUserPermissions(@Param('id') id: string) {
+    return this.permissionCacheService.getCachedUserPermissions(id);
+  }
+
+  // @Get(':id/permissions')
+  // async getUserPermissions(@Param('id') id: string) {
+  //   const permissions = await this.rolesService.getUserPermissions(id);
+  //   await this.permissionCacheService.cacheUserPermissions(id, permissions);
+  //   return permissions;
+  // }
 }

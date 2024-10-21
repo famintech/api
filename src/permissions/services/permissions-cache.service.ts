@@ -32,4 +32,10 @@ export class PermissionCacheService {
       await this.invalidateUserPermissions(userId);
     }
   }
+
+  async getCachedUserPermissions(userId: string): Promise<string[]> {
+    const key = `user:${userId}:permissions`;
+    const cachedPermissions = await this.redisService.smembers(key);
+    return cachedPermissions;
+  }
 }

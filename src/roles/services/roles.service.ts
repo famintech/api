@@ -2,10 +2,14 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { PrismaService } from '../../../prisma/services/prisma.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
+import { PermissionCacheService } from '../../permissions/services/permissions-cache.service';
 
 @Injectable()
 export class RolesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private permissionCacheService: PermissionCacheService
+  ) {}
 
   async create(createRoleDto: CreateRoleDto) {
     try {
@@ -60,7 +64,7 @@ export class RolesService {
 
   async addUserToRole(userId: string, roleId: string) {
     try {
-      return await this.prisma.role.update({
+      await this.prisma.role.update({
         where: { id: roleId },
         data: {
           users: {
@@ -68,14 +72,15 @@ export class RolesService {
           },
         },
       });
+      await this.updateUserPermissionsCache(userId);
     } catch (error) {
       throw new NotFoundException('User or Role not found');
     }
   }
-
+  
   async removeUserFromRole(userId: string, roleId: string) {
     try {
-      return await this.prisma.role.update({
+      await this.prisma.role.update({
         where: { id: roleId },
         data: {
           users: {
@@ -83,6 +88,7 @@ export class RolesService {
           },
         },
       });
+      await this.updateUserPermissionsCache(userId);
     } catch (error) {
       throw new NotFoundException('User or Role not found');
     }
@@ -90,12 +96,14 @@ export class RolesService {
 
   async addPermissionToRole(permissionId: string, roleId: string) {
     try {
-      return await this.prisma.rolePermission.create({
+      const result = await this.prisma.rolePermission.create({
         data: {
           roleId,
           permissionId,
         },
       });
+      await this.permissionCacheService.invalidateRolePermissions(roleId);
+      return result;
     } catch (error) {
       if (error.code === 'P2002') {
         throw new ConflictException('Permission is already assigned to this role');
@@ -103,10 +111,10 @@ export class RolesService {
       throw new NotFoundException('Permission or Role not found');
     }
   }
-
+  
   async removePermissionFromRole(permissionId: string, roleId: string) {
     try {
-      return await this.prisma.rolePermission.delete({
+      const result = await this.prisma.rolePermission.delete({
         where: {
           roleId_permissionId: {
             roleId,
@@ -114,6 +122,8 @@ export class RolesService {
           },
         },
       });
+      await this.permissionCacheService.invalidateRolePermissions(roleId);
+      return result;
     } catch (error) {
       throw new NotFoundException('Permission is not assigned to this role');
     }
@@ -164,5 +174,25 @@ export class RolesService {
     } catch (error) {
       throw new NotFoundException(`Role with ID "${roleId}" not found`);
     }
+  }
+
+  async updateUserPermissionsCache(userId: string): Promise<void> {
+    const userRoles = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { roles: true },
+    });
+  
+    if (!userRoles) {
+      throw new NotFoundException(`User with ID "${userId}" not found`);
+    }
+  
+    const permissions = new Set<string>();
+  
+    for (const role of userRoles.roles) {
+      const rolePermissions = await this.getInheritedPermissions(role.id);
+      rolePermissions.forEach((permission) => permissions.add(permission));
+    }
+  
+    await this.permissionCacheService.cacheUserPermissions(userId, Array.from(permissions));
   }
 }

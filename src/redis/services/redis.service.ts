@@ -51,4 +51,52 @@ export class RedisService {
       throw error;
     }
   }
+
+  async del(key: string): Promise<number> {
+    this.logger.log(`Attempting to delete key: ${key}`);
+    try {
+      const result = await this.redisClient.del(key);
+      this.logger.log(`Successfully deleted key: ${key}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Failed to delete key: ${key}`, error.stack);
+      throw error;
+    }
+  }
+  
+  async sadd(key: string, ...members: string[]): Promise<number> {
+    this.logger.log(`Attempting to add members to set: ${key}`);
+    try {
+      const result = await this.redisClient.sadd(key, ...members);
+      this.logger.log(`Successfully added members to set: ${key}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Failed to add members to set: ${key}`, error.stack);
+      throw error;
+    }
+  }
+  
+  async smembers(key: string): Promise<string[]> {
+    this.logger.log(`Attempting to get members of set: ${key}`);
+    try {
+      const result = await this.redisClient.smembers(key);
+      this.logger.log(`Successfully got members of set: ${key}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Failed to get members of set: ${key}`, error.stack);
+      throw error;
+    }
+  }
+  
+  async expire(key: string, seconds: number): Promise<number> {
+    this.logger.log(`Attempting to set expiration for key: ${key}`);
+    try {
+      const result = await this.redisClient.expire(key, seconds);
+      this.logger.log(`Successfully set expiration for key: ${key}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Failed to set expiration for key: ${key}`, error.stack);
+      throw error;
+    }
+  }
 }

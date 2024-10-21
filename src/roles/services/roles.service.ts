@@ -195,4 +195,24 @@ export class RolesService {
   
     await this.permissionCacheService.cacheUserPermissions(userId, Array.from(permissions));
   }
+
+  async getUserPermissions(userId: string): Promise<string[]> {
+    const userRoles = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { roles: true },
+    });
+  
+    if (!userRoles) {
+      throw new NotFoundException(`User with ID "${userId}" not found`);
+    }
+  
+    const permissions = new Set<string>();
+  
+    for (const role of userRoles.roles) {
+      const rolePermissions = await this.getInheritedPermissions(role.id);
+      rolePermissions.forEach((permission) => permissions.add(permission));
+    }
+  
+    return Array.from(permissions);
+  }
 }

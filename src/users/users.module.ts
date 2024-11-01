@@ -5,12 +5,10 @@ import { RolesModule } from '../roles/roles.module';
 import { RolesService } from '../roles/services/roles.service';
 import { PermissionCacheService } from '../permissions/services/permissions-cache.service';
 import { PermissionsModule } from '../permissions/permissions.module';
-import { RedisModule } from '../redis/redis.module';
-import { RedisService } from '../redis/services/redis.service';
-
+  
 @Module({
-  imports: [RolesModule, PermissionsModule, RedisModule],
-  providers: [UsersService, RolesService, PermissionCacheService, RedisService],
+  imports: [RolesModule, PermissionsModule],
+  providers: [UsersService, RolesService, PermissionCacheService],
   controllers: [UsersController],
   exports: [UsersService],
 })

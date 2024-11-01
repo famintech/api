@@ -3,7 +3,6 @@ import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../../prisma/services/prisma.service';
 
 @Injectable()
-@Injectable()
 export class PermissionsGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
@@ -23,34 +22,31 @@ export class PermissionsGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    if (!user) {
+    if (!user || !user.userId) {
       return false;
     }
 
-    // Get user permissions directly from database
-    const userWithRoles = await this.prisma.user.findUnique({
-      where: { id: user.id },
+    // Get user's roles and their permissions
+    const userRoles = await this.prisma.role.findMany({
+      where: {
+        users: {
+          some: {
+            id: user.userId
+          }
+        }
+      },
       include: {
-        roles: {
+        permissions: {
           include: {
-            permissions: {
-              include: {
-                permission: true
-              }
-            }
+            permission: true
           }
         }
       }
     });
 
-    if (!userWithRoles) {
-      return false;
-    }
-
     const userPermissions = new Set<string>();
     
-    // Collect all permissions from user's roles
-    for (const role of userWithRoles.roles) {
+    for (const role of userRoles) {
       for (const rolePermission of role.permissions) {
         userPermissions.add(rolePermission.permission.name);
       }

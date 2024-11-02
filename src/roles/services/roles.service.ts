@@ -3,14 +3,12 @@ import { PrismaService } from '../../../prisma/services/prisma.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
 import { PermissionCacheService } from '../../permissions/services/permissions-cache.service';
-import { PermissionUpdatesService } from 'src/websocket/services/permission-updates.service';
 
 @Injectable()
 export class RolesService {
   constructor(
     private prisma: PrismaService,
     private permissionCacheService: PermissionCacheService,
-    private permissionUpdatesService: PermissionUpdatesService
   ) {}
 
   async create(createRoleDto: CreateRoleDto) {
@@ -96,43 +94,43 @@ export class RolesService {
     }
   }
 
-  async addPermissionToRole(permissionId: string, roleId: string) {
-    try {
-      const result = await this.prisma.rolePermission.create({
-        data: {
-          roleId,
-          permissionId,
-        },
-      });
+  // async addPermissionToRole(permissionId: string, roleId: string) {
+  //   try {
+  //     const result = await this.prisma.rolePermission.create({
+  //       data: {
+  //         roleId,
+  //         permissionId,
+  //       },
+  //     });
       
-      // Invalidate the role's permissions cache
-      await this.permissionCacheService.invalidateRolePermissions(roleId);
+  //     // Invalidate the role's permissions cache
+  //     await this.permissionCacheService.invalidateRolePermissions(roleId);
       
-      // Update the cache for all users with this role
-      const usersWithRole = await this.prisma.user.findMany({
-        where: {
-          roles: {
-            some: {
-              id: roleId,
-            },
-          },
-        },
-      });
+  //     // Update the cache for all users with this role
+  //     const usersWithRole = await this.prisma.user.findMany({
+  //       where: {
+  //         roles: {
+  //           some: {
+  //             id: roleId,
+  //           },
+  //         },
+  //       },
+  //     });
       
-      for (const user of usersWithRole) {
-        await this.permissionUpdatesService.notifyPermissionChange(user.id);
-      }
+  //     for (const user of usersWithRole) {
+  //       await this.permissionUpdatesService.notifyPermissionChange(user.id);
+  //     }
       
-      await this.permissionUpdatesService.notifyRolePermissionChange(roleId);
+  //     await this.permissionUpdatesService.notifyRolePermissionChange(roleId);
       
-      return result;
-    } catch (error) {
-      if (error.code === 'P2002') {
-        throw new ConflictException('Permission is already assigned to this role');
-      }
-      throw new NotFoundException('Permission or Role not found');
-    }
-  }
+  //     return result;
+  //   } catch (error) {
+  //     if (error.code === 'P2002') {
+  //       throw new ConflictException('Permission is already assigned to this role');
+  //     }
+  //     throw new NotFoundException('Permission or Role not found');
+  //   }
+  // }
   
   async removePermissionFromRole(permissionId: string, roleId: string) {
     try {

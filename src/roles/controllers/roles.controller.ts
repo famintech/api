@@ -50,10 +50,10 @@ export class RolesController {
     return this.rolesService.removeUserFromRole(userId, roleId);
   }
 
-  @Post(':roleId/permissions/:permissionId')
-  addPermissionToRole(@Param('roleId') roleId: string, @Param('permissionId') permissionId: string) {
-    return this.rolesService.addPermissionToRole(permissionId, roleId);
-  }
+  // @Post(':roleId/permissions/:permissionId')
+  // addPermissionToRole(@Param('roleId') roleId: string, @Param('permissionId') permissionId: string) {
+  //   return this.rolesService.addPermissionToRole(permissionId, roleId);
+  // }
 
   @Delete(':roleId/permissions/:permissionId')
   removePermissionFromRole(@Param('roleId') roleId: string, @Param('permissionId') permissionId: string) {

@@ -9,15 +9,15 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors({
-    origin: ['https://siren.famin.cloud', 'http://localhost:3000'],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Authorization'],
-    credentials: true,
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  });
+  // app.enableCors({
+  //   origin: ['https://siren.famin.cloud', 'http://localhost:3000'],
+  //   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  //   allowedHeaders: ['Content-Type', 'Authorization'],
+  //   exposedHeaders: ['Authorization'],
+  //   credentials: true,
+  //   preflightContinue: false,
+  //   optionsSuccessStatus: 204,
+  // });
 
   const configService = app.get(ConfigService);
   app.useWebSocketAdapter(new IoAdapter(app));

@@ -1,8 +1,9 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards, Request } from '@nestjs/common';
 import { UsersService } from '../services/users.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { RolesService } from '../../roles/services/roles.service';
 import { PermissionCacheService } from '../../permissions/services/permissions-cache.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('users')
 export class UsersController {
@@ -33,6 +34,21 @@ export class UsersController {
   @Get(':id/cached-permissions')
   async getCachedUserPermissions(@Param('id') id: string) {
     return this.permissionCacheService.getCachedUserPermissions(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('profile')
+  async getProfile(@Request() req) {
+    const user = await this.usersService.findOne(req.user.userId, {
+      include: {
+        roles: {
+          include: {
+            permissions: true
+          }
+        }
+      }
+    });
+    return user;
   }
 
   // @Get(':id/permissions')

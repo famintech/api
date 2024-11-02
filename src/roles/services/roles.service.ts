@@ -3,12 +3,14 @@ import { PrismaService } from '../../../prisma/services/prisma.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
 import { PermissionCacheService } from '../../permissions/services/permissions-cache.service';
+import { PermissionUpdatesService } from 'src/websocket/services/permission-updates.service';
 
 @Injectable()
 export class RolesService {
   constructor(
     private prisma: PrismaService,
-    private permissionCacheService: PermissionCacheService
+    private permissionCacheService: PermissionCacheService,
+    private permissionUpdatesService: PermissionUpdatesService
   ) {}
 
   async create(createRoleDto: CreateRoleDto) {
@@ -118,8 +120,10 @@ export class RolesService {
       });
       
       for (const user of usersWithRole) {
-        await this.updateUserPermissionsCache(user.id);
+        await this.permissionUpdatesService.notifyPermissionChange(user.id);
       }
+      
+      await this.permissionUpdatesService.notifyRolePermissionChange(roleId);
       
       return result;
     } catch (error) {

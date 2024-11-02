@@ -11,7 +11,7 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly rolesService: RolesService,
     private readonly permissionCacheService: PermissionCacheService
-  ) {}
+  ) { }
 
   @Post('register')
   async register(@Body() createUserDto: CreateUserDto) {
@@ -43,7 +43,11 @@ export class UsersController {
       include: {
         roles: {
           include: {
-            permissions: true
+            permissions: {
+              include: {
+                permission: true  
+              }
+            }
           }
         }
       }

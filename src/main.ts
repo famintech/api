@@ -11,9 +11,12 @@ async function bootstrap() {
 
   app.enableCors({
     origin: ['https://siren.famin.cloud', 'http://localhost:3000'],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Authorization'],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   const configService = app.get(ConfigService);

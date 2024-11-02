@@ -8,6 +8,14 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    origin: ['https://siren.famin.cloud', 'http://localhost:3000'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
   const configService = app.get(ConfigService);
   app.useWebSocketAdapter(new IoAdapter(app));
   const port = configService.get<number>('port');

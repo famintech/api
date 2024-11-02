@@ -4,10 +4,11 @@ import { RolesController } from './controllers/roles.controller'
 import { PrismaModule } from '../../prisma/prisma.module';
 import { PrismaService } from '../../prisma/services/prisma.service';
 import { PermissionCacheService } from '../permissions/services/permissions-cache.service';
+import { PermissionUpdatesService } from 'src/websocket/services/permission-updates.service';
 
 @Module({
   imports: [PrismaModule],
-  providers: [RolesService, PrismaService, PermissionCacheService],
+  providers: [RolesService, PrismaService, PermissionCacheService, PermissionUpdatesService],
   controllers: [RolesController],
   exports: [RolesService],
 })

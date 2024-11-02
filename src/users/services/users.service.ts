@@ -33,6 +33,17 @@ export class UsersService {
   async findOne(id: string, options = {}) {
     return this.prisma.user.findUnique({
       where: { id },
+      include: {
+        roles: {
+          include: {
+            permissions: {
+              include: {
+                permission: true
+              }
+            }
+          }
+        }
+      },
       ...options,
     });
   }

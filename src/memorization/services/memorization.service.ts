@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/services/prisma.service';
-import { CreateMemorizationDto, Status } from '../dto/create-memorization.dto';
+import { CreateMemorizationDto } from '../dto/create-memorization.dto';
+import { Priority, Status } from '@prisma/client';
 import { UpdateMemorizationDto } from '../dto/update-memorization.dto';
 
 @Injectable()
@@ -8,8 +9,12 @@ export class MemorizationService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateMemorizationDto) {
+    const now = new Date();
+    
     return this.prisma.memorization.create({
-      data,
+      data: {
+        ...data,
+      },
     });
   }
 

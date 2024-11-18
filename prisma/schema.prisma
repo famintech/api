@@ -79,8 +79,7 @@ model Memorization {
   scope     String
   status    Status   @default(PENDING)
   progress  Float    @default(0)
-  startTime DateTime
-  duration  String
+  startTime DateTime @default(now())
   priority  Priority @default(LOW)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

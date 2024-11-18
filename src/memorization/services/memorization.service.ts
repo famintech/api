@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/services/prisma.service';
-import { CreateMemorizationDto } from '../dto/create-memorization.dto';
+import { CreateMemorizationDto, Status } from '../dto/create-memorization.dto';
 import { UpdateMemorizationDto } from '../dto/update-memorization.dto';
 
 @Injectable()
@@ -45,7 +45,7 @@ export class MemorizationService {
       where: { id },
       data: {
         progress,
-        status: progress === 100 ? 'COMPLETED' : 'IN_PROGRESS',
+        status: progress === 100 ? Status.COMPLETED : Status.IN_PROGRESS,
       },
     });
   }

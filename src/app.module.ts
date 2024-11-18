@@ -11,6 +11,7 @@ import { WebsocketModule } from './websocket/websocket.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
+import { MemorizationModule } from './memorization/memorization.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
     PermissionsModule,
     WebsocketModule,
     PrismaModule,
+    MemorizationModule,
   ],
 })
 export class AppModule {}

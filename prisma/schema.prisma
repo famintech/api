@@ -72,3 +72,28 @@ model RolePermission {
 
   @@id([roleId, permissionId])
 }
+
+enum Status {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum Priority { 
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Memorization {
+  id        String   @id @default(cuid())
+  target    String
+  scope     String
+  status    Status   @default(PENDING)
+  progress  Float    @default(0)
+  startTime DateTime
+  duration  String
+  priority  Priority @default(LOW)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

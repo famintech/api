@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -18,6 +19,8 @@ async function bootstrap() {
   //   preflightContinue: false,
   //   optionsSuccessStatus: 204,
   // });
+
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   const configService = app.get(ConfigService);
   app.useWebSocketAdapter(new IoAdapter(app));

@@ -9,13 +9,23 @@ export class MemorizationService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateMemorizationDto) {
-    const now = new Date();
-    
-    return this.prisma.memorization.create({
-      data: {
-        ...data,
-      },
-    });
+    try {
+      const now = new Date();
+      
+      return await this.prisma.memorization.create({
+        data: {
+          target: data.target,
+          scope: data.scope,
+          status: data.status || Status.PENDING,
+          priority: data.priority || Priority.MEDIUM,
+          startTime: now,
+          progress: 0
+        },
+      });
+    } catch (error) {
+      console.error('Error creating memorization:', error);
+      throw error;
+    }
   }
 
   async findAll() {

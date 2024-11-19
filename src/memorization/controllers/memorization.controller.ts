@@ -31,7 +31,7 @@ export class MemorizationController {
             throw new HttpException(
                 {
                     statusCode: HttpStatus.BAD_REQUEST,
-                    message: `Failed to create memorization: ${errorMessage}`,
+                    message: `Failed to create memorization : ${errorMessage}`,
                     error: 'Bad Request'
                 },
                 HttpStatus.BAD_REQUEST

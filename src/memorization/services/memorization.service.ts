@@ -11,7 +11,7 @@ export class MemorizationService {
     constructor(private prisma: PrismaService) {}
 
     private formatDateTime(date: Date): string {
-        const formatted = date.toLocaleString('en-GB', {
+        return date.toLocaleString('en-GB', {
             timeZone: MemorizationService.TIMEZONE,
             day: '2-digit',
             month: '2-digit',
@@ -20,19 +20,14 @@ export class MemorizationService {
             minute: '2-digit',
             second: '2-digit',
             hour12: false
-        });
-        
-        const ms = date.getMilliseconds().toString().padStart(3, '0');
-        return `${formatted}.${ms}`;
+        }) + `.${date.getMilliseconds().toString().padStart(3, '0')}`;
     }
 
     private createDateInKLTimezone(): Date {
-        // Create date in KL timezone
-        return new Date(
-            new Date().toLocaleString('en-US', {
-                timeZone: MemorizationService.TIMEZONE
-            })
-        );
+        const now = new Date();
+        const klTime = new Date(now.toLocaleString('en-US', { timeZone: MemorizationService.TIMEZONE }));
+        klTime.setMilliseconds(now.getMilliseconds());
+        return klTime;
     }
 
     private formatResponse(data: Memorization) {
@@ -46,17 +41,23 @@ export class MemorizationService {
 
     async create(data: CreateMemorizationDto) {
         try {
+            const currentTime = this.createDateInKLTimezone();
             const result = await this.prisma.memorization.create({
                 data: {
                     ...data,
-                    startTime: this.createDateInKLTimezone(),
+                    startTime: data.status === Status.IN_PROGRESS ? currentTime : null,
                     status: data.status || Status.PENDING,
                     priority: data.priority || Priority.MEDIUM,
                     progress: 0
                 },
             });
 
-            return this.formatResponse(result);
+            return {
+                ...result,
+                startTime: result.startTime ? this.formatDateTime(result.startTime) : null,
+                createdAt: this.formatDateTime(result.createdAt),
+                updatedAt: this.formatDateTime(result.updatedAt)
+            };
         } catch (error) {
             console.error('Error creating memorization:', error);
             throw error;
@@ -100,15 +101,31 @@ export class MemorizationService {
 
     async updateProgress(id: string, progress: number) {
         try {
+            const currentTime = this.createDateInKLTimezone();
+            const memorization = await this.prisma.memorization.findUnique({
+                where: { id }
+            });
+    
+            // Only set startTime if it's null and the status is changing to IN_PROGRESS
+            const startTime = memorization.startTime || 
+                (progress > 0 && progress < 100 ? currentTime : null);
+    
             const result = await this.prisma.memorization.update({
                 where: { id },
                 data: {
                     progress,
                     status: progress === 100 ? Status.COMPLETED : Status.IN_PROGRESS,
-                    updatedAt: this.createDateInKLTimezone()
+                    startTime, // This will keep existing startTime if it exists
+                    updatedAt: currentTime
                 },
             });
-            return this.formatResponse(result);
+    
+            return {
+                ...result,
+                startTime: result.startTime ? this.formatDateTime(result.startTime) : null,
+                createdAt: this.formatDateTime(result.createdAt),
+                updatedAt: this.formatDateTime(result.updatedAt)
+            };
         } catch (error) {
             console.error('Error updating progress:', error);
             throw error;

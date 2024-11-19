@@ -15,17 +15,26 @@ import { UpdateMemorizationDto } from '../dto/update-memorization.dto';
 
 @Controller('memorization')
 export class MemorizationController {
-    constructor(private readonly memorizationService: MemorizationService) { }
+    constructor(private readonly memorizationService: MemorizationService) {}
 
     @Post()
     async create(@Body() createMemorizationDto: CreateMemorizationDto) {
         try {
             return await this.memorizationService.create(createMemorizationDto);
         } catch (error) {
-            console.error('Create memorization error:', error);
+            // Clean up the error message
+            const errorMessage = error.message
+                .replace(/\n/g, ' ')  // Replace newlines with spaces
+                .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+                .trim();             // Remove leading/trailing spaces
+
             throw new HttpException(
-                `Failed to create memorization: ${error.message}`,
-                HttpStatus.BAD_REQUEST,
+                {
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: `Failed to create memorization: ${errorMessage}`,
+                    error: 'Bad Request'
+                },
+                HttpStatus.BAD_REQUEST
             );
         }
     }

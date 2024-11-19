@@ -22,38 +22,17 @@ export class MemorizationService {
             hour12: false
         });
         
-        // Add milliseconds
         const ms = date.getMilliseconds().toString().padStart(3, '0');
         return `${formatted}.${ms}`;
     }
 
-    private parseFormattedDate(dateString: string): Date {
-        // Convert "DD/MM/YYYY, HH:mm:ss.SSS" to Date object
-        const [datePart, timePart] = dateString.split(', ');
-        const [day, month, year] = datePart.split('/');
-        const [time, ms] = timePart.split('.');
-        const [hour, minute, second] = time.split(':');
-        
+    private createDateInKLTimezone(): Date {
+        // Create date in KL timezone
         return new Date(
-            Date.UTC(
-                +year,
-                +month - 1, // months are 0-based
-                +day,
-                +hour - 8, // adjust for UTC+8
-                +minute,
-                +second,
-                +ms
-            )
-        );
-    }
-
-    private createFormattedDateNow(): string {
-        const now = new Date(
-            new Date().toLocaleString('en-GB', {
+            new Date().toLocaleString('en-US', {
                 timeZone: MemorizationService.TIMEZONE
             })
         );
-        return this.formatDateTime(now);
     }
 
     private formatResponse(data: Memorization) {
@@ -67,12 +46,10 @@ export class MemorizationService {
 
     async create(data: CreateMemorizationDto) {
         try {
-            const now = this.createFormattedDateNow();
-            
             const result = await this.prisma.memorization.create({
                 data: {
                     ...data,
-                    startTime: this.parseFormattedDate(now),
+                    startTime: this.createDateInKLTimezone(),
                     status: data.status || Status.PENDING,
                     priority: data.priority || Priority.MEDIUM,
                     progress: 0
@@ -128,7 +105,7 @@ export class MemorizationService {
                 data: {
                     progress,
                     status: progress === 100 ? Status.COMPLETED : Status.IN_PROGRESS,
-                    updatedAt: this.parseFormattedDate(this.createFormattedDateNow())
+                    updatedAt: this.createDateInKLTimezone()
                 },
             });
             return this.formatResponse(result);

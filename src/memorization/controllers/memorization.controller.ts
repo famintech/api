@@ -76,7 +76,7 @@ export class MemorizationController {
     @Delete(':id')
     async remove(@Param('id') id: string) {
         try {
-            return await this.memorizationService.remove(id);
+            return await this.memorizationService.delete(id);
         } catch (error) {
             throw new HttpException(
                 'Failed to delete memorization',

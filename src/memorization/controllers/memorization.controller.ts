@@ -15,7 +15,7 @@ import { UpdateMemorizationDto } from '../dto/update-memorization.dto';
 
 @Controller('memorization')
 export class MemorizationController {
-    constructor(private readonly memorizationService: MemorizationService) {}
+    constructor(private readonly memorizationService: MemorizationService) { }
 
     @Post()
     async create(@Body() createMemorizationDto: CreateMemorizationDto) {
@@ -44,8 +44,13 @@ export class MemorizationController {
         try {
             return await this.memorizationService.findAll();
         } catch (error) {
+            console.error('Error in findAll:', error); // Add detailed logging
             throw new HttpException(
-                'Failed to fetch memorizations',
+                {
+                    statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                    message: 'Failed to fetch memorizations',
+                    error: error.message
+                },
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }

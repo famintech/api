@@ -33,7 +33,7 @@ export class MemorizationService {
     private formatResponse(data: Memorization) {
         return {
             ...data,
-            startTime: this.formatDateTime(data.startTime),
+            startTime: data.startTime ? this.formatDateTime(data.startTime) : null,
             createdAt: this.formatDateTime(data.createdAt),
             updatedAt: this.formatDateTime(data.updatedAt)
         };
@@ -66,10 +66,22 @@ export class MemorizationService {
 
     // Add this to other methods as well
     async findAll() {
-        const results = await this.prisma.memorization.findMany({
-            orderBy: { createdAt: 'desc' },
-        });
-        return results.map(result => this.formatResponse(result));
+        try {
+            const results = await this.prisma.memorization.findMany({
+                orderBy: { createdAt: 'desc' },
+            });
+            
+            // Explicitly handle null startTime in the response
+            return results.map(result => ({
+                ...result,
+                startTime: result.startTime ? this.formatDateTime(result.startTime) : null,
+                createdAt: this.formatDateTime(result.createdAt),
+                updatedAt: this.formatDateTime(result.updatedAt)
+            }));
+        } catch (error) {
+            console.error('Error fetching memorizations:', error);
+            throw error;
+        }
     }
 
     async findOne(id: string) {

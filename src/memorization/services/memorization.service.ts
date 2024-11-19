@@ -24,10 +24,9 @@ export class MemorizationService {
     }
 
     private createDateInKLTimezone(): Date {
-        const now = new Date();
-        const klTime = new Date(now.toLocaleString('en-US', { timeZone: MemorizationService.TIMEZONE }));
-        klTime.setMilliseconds(now.getMilliseconds());
-        return klTime;
+        return new Date(new Date().toLocaleString('en-US', { 
+            timeZone: MemorizationService.TIMEZONE 
+        }));
     }
 
     private formatResponse(data: Memorization) {

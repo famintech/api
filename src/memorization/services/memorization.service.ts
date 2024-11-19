@@ -10,9 +10,14 @@ export class MemorizationService {
     
     constructor(private prisma: PrismaService) {}
 
-    private formatDateTime(date: Date): string {
-        return date.toLocaleString('en-GB', {
-            timeZone: MemorizationService.TIMEZONE,
+    private formatDateTime(date: Date | null): string | null {
+        if (!date) return null;
+        
+        // Convert UTC to KL time for display
+        const klDate = new Date(date.getTime());
+        klDate.setHours(klDate.getHours() + 8); // KL is UTC+8
+        
+        return klDate.toLocaleString('en-GB', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
@@ -20,13 +25,21 @@ export class MemorizationService {
             minute: '2-digit',
             second: '2-digit',
             hour12: false
-        }) + `.${date.getMilliseconds().toString().padStart(3, '0')}`;
+        }) + `.${klDate.getMilliseconds().toString().padStart(3, '0')}`;
     }
 
     private createDateInKLTimezone(): Date {
-        return new Date(new Date().toLocaleString('en-US', { 
-            timeZone: MemorizationService.TIMEZONE 
-        }));
+        const date = new Date();
+        // Store as UTC but representing KL time
+        return new Date(Date.UTC(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate(),
+            date.getHours(),
+            date.getMinutes(),
+            date.getSeconds(),
+            date.getMilliseconds()
+        ));
     }
 
     private formatResponse(data: Memorization) {

@@ -4,24 +4,25 @@ import { Status, Priority } from '@prisma/client';
 import { CreateMemorizationItemDto } from './create-memorization-item.dto';
 
 export class CreateMemorizationDto {
-  @IsString()
-  @IsNotEmpty()
-  target: string;
+    @IsString()
+    @IsNotEmpty()
+    target: string;
 
-  @IsString()
-  @IsNotEmpty()
-  scope: string;
+    @IsString()
+    @IsNotEmpty()
+    scope: string;
 
-  @IsEnum(Status)
-  @IsOptional()
-  status?: Status;
+    @IsEnum(Status)
+    @IsOptional()
+    status?: Status;
 
-  @IsEnum(Priority)
-  @IsOptional()
-  priority?: Priority;
+    @IsEnum(Priority)
+    @IsOptional()
+    priority?: Priority;
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateMemorizationItemDto)
-  items: CreateMemorizationItemDto[];
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => CreateMemorizationItemDto)
+    @IsOptional()
+    items?: CreateMemorizationItemDto[];
 }

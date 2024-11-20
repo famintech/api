@@ -73,18 +73,18 @@ export class MemorizationService {
                     status: data.status || Status.PENDING,
                     priority: data.priority || Priority.MEDIUM,
                     progress: 0,
-                    items: {
+                    items: data.items ? {
                         create: data.items.map(item => ({
                             ...item,
                             progress: 0,
                         }))
-                    }
+                    } : undefined
                 },
                 include: {
                     items: true
                 }
             });
-
+    
             return this.formatResponse(result);
         } catch (error) {
             console.error('Error creating memorization:', error);

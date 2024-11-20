@@ -162,14 +162,24 @@ export class MemorizationService {
         const result = await this.prisma.memorization.findUnique({
             where: { id },
             include: {
-                items: {
-                    include: {
-                        progressRecords: true
-                    }
-                }
+                items: true
             }
         });
-        return result ? this.formatResponse(result) : null;
+    
+        if (!result) return null;
+    
+        // Transform the result to include checkbox states
+        const formattedResult = {
+            ...result,
+            items: result.items.map(item => ({
+                ...item,
+                checkboxStates: new Array(item.repetitionsRequired)
+                    .fill(false)
+                    .map((_, index) => index < item.completedRepetitions)
+            }))
+        };
+    
+        return this.formatResponse(formattedResult);
     }
 
     async update(id: string, data: UpdateMemorizationDto) {

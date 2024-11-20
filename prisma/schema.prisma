@@ -93,26 +93,27 @@ model Memorization {
 }
 
 model MemorizationItem {
-  id                String   @id @default(cuid())
-  title            String
-  content          String   @db.Text
-  repetitionsRequired Int    @default(40)
-  progress         Float    @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  memorization     Memorization @relation(fields: [memorizationId], references: [id], onDelete: Cascade)
-  memorizationId   String
-  progressRecords  ItemProgress[]
+  id                  String         @id @default(cuid())
+  title              String
+  content            String         @db.Text
+  repetitionsRequired Int           @default(40)
+  completedRepetitions Int          @default(0)
+  progress           Float          @default(0)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  memorization       Memorization   @relation(fields: [memorizationId], references: [id], onDelete: Cascade)
+  memorizationId     String
+  progressRecords    ItemProgress[]
 
   @@index([memorizationId])
 }
 
 model ItemProgress {
-  id               String   @id @default(cuid())
+  id               String           @id @default(cuid())
   repetitionNumber Int
-  completed        Boolean  @default(false)
+  completed        Boolean          @default(false)
   completedAt      DateTime?
-  createdAt        DateTime @default(now())
+  createdAt        DateTime         @default(now())
   item             MemorizationItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
   itemId           String
 

@@ -114,51 +114,36 @@ export class MemorizationService {
 
     async updateItemProgress(itemId: string, data: UpdateItemProgressDto) {
         const result = await this.prisma.$transaction(async (prisma) => {
-            // Create or update progress record
-            const progressRecord = await prisma.itemProgress.upsert({
-                where: {
-                    id: `${itemId}_${data.repetitionNumber}`, // Use a single unique identifier
-                },
-                create: {
-                    id: `${itemId}_${data.repetitionNumber}`, // Add this line
-                    itemId,
-                    ...data,
-                    completedAt: data.completed ? new Date() : null
-                },
-                update: {
-                    completed: data.completed,
-                    completedAt: data.completed ? new Date() : null
-                }
-            });
-
-            // Update item progress
-            const completedCount = await prisma.itemProgress.count({
-                where: {
-                    itemId,
-                    completed: true
-                }
-            });
-
             const item = await prisma.memorizationItem.findUnique({
                 where: { id: itemId },
                 include: { memorization: true }
             });
-
-            const progress = (completedCount / item.repetitionsRequired) * 100;
-
+    
+            // Calculate new completed repetitions count
+            let completedRepetitions = item.completedRepetitions;
+            if (data.completed) {
+                completedRepetitions = Math.max(data.repetitionNumber, completedRepetitions);
+            } else {
+                completedRepetitions = Math.min(data.repetitionNumber - 1, completedRepetitions);
+            }
+    
             // Update item progress
+            const progress = (completedRepetitions / item.repetitionsRequired) * 100;
             await prisma.memorizationItem.update({
                 where: { id: itemId },
-                data: { progress }
+                data: { 
+                    progress,
+                    completedRepetitions
+                }
             });
-
+    
             // Update memorization overall progress
             const items = await prisma.memorizationItem.findMany({
                 where: { memorizationId: item.memorizationId }
             });
-
+    
             const overallProgress = items.reduce((acc, item) => acc + item.progress, 0) / items.length;
-
+    
             await prisma.memorization.update({
                 where: { id: item.memorizationId },
                 data: {
@@ -166,10 +151,10 @@ export class MemorizationService {
                     status: overallProgress === 100 ? Status.COMPLETED : Status.IN_PROGRESS
                 }
             });
-
-            return progressRecord;
+    
+            return { progress, overallProgress, completedRepetitions };
         });
-
+    
         return result;
     }
 

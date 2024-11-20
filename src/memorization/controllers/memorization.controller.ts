@@ -12,21 +12,23 @@ import {
 import { MemorizationService } from '../services/memorization.service';
 import { CreateMemorizationDto } from '../dto/create-memorization.dto';
 import { UpdateMemorizationDto } from '../dto/update-memorization.dto';
+import { UpdateItemProgressDto } from '../dto/update-item-progress.dto';
+import { AddMemorizationItemDto } from '../dto/add-memorization-item.dto';
 
 @Controller('memorization')
 export class MemorizationController {
     constructor(private readonly memorizationService: MemorizationService) { }
 
+    // Keep existing endpoints (referenced from lines 20-121)
     @Post()
     async create(@Body() createMemorizationDto: CreateMemorizationDto) {
         try {
             return await this.memorizationService.create(createMemorizationDto);
         } catch (error) {
-            // Clean up the error message
             const errorMessage = error.message
-                .replace(/\n/g, ' ')  // Replace newlines with spaces
-                .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-                .trim();             // Remove leading/trailing spaces
+                .replace(/\n/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
 
             throw new HttpException(
                 {
@@ -44,7 +46,6 @@ export class MemorizationController {
         try {
             return await this.memorizationService.findAll();
         } catch (error) {
-            console.error('Error in findAll:', error); // Add detailed logging
             throw new HttpException(
                 {
                     statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -56,6 +57,27 @@ export class MemorizationController {
         }
     }
 
+    // Add new endpoint for updating item progress
+    @Patch('items/:itemId/progress')
+    async updateItemProgress(
+        @Param('itemId') itemId: string,
+        @Body() updateItemProgressDto: UpdateItemProgressDto
+    ) {
+        try {
+            return await this.memorizationService.updateItemProgress(itemId, updateItemProgressDto);
+        } catch (error) {
+            throw new HttpException(
+                {
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: 'Failed to update item progress',
+                    error: error.message
+                },
+                HttpStatus.BAD_REQUEST
+            );
+        }
+    }
+
+    // Keep other existing endpoints but update findOne to include items
     @Get(':id')
     async findOne(@Param('id') id: string) {
         try {
@@ -66,12 +88,17 @@ export class MemorizationController {
             return memorization;
         } catch (error) {
             throw new HttpException(
-                'Failed to fetch memorization',
+                {
+                    statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                    message: 'Failed to fetch memorization',
+                    error: error.message
+                },
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
         }
     }
 
+    // Keep remaining existing endpoints
     @Patch(':id')
     async update(
         @Param('id') id: string,
@@ -81,7 +108,11 @@ export class MemorizationController {
             return await this.memorizationService.update(id, updateMemorizationDto);
         } catch (error) {
             throw new HttpException(
-                'Failed to update memorization',
+                {
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: 'Failed to update memorization',
+                    error: error.message
+                },
                 HttpStatus.BAD_REQUEST,
             );
         }
@@ -93,7 +124,11 @@ export class MemorizationController {
             return await this.memorizationService.delete(id);
         } catch (error) {
             throw new HttpException(
-                'Failed to delete memorization',
+                {
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: 'Failed to delete memorization',
+                    error: error.message
+                },
                 HttpStatus.BAD_REQUEST,
             );
         }
@@ -114,8 +149,31 @@ export class MemorizationController {
             return await this.memorizationService.updateProgress(id, progress);
         } catch (error) {
             throw new HttpException(
-                'Failed to update progress',
+                {
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: 'Failed to update progress',
+                    error: error.message
+                },
                 HttpStatus.BAD_REQUEST,
+            );
+        }
+    }
+
+    @Post(':id/items')
+    async addItem(
+        @Param('id') id: string,
+        @Body() addItemDto: AddMemorizationItemDto
+    ) {
+        try {
+            return await this.memorizationService.addItem(id, addItemDto);
+        } catch (error) {
+            throw new HttpException(
+                {
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: 'Failed to add item',
+                    error: error.message
+                },
+                HttpStatus.BAD_REQUEST
             );
         }
     }

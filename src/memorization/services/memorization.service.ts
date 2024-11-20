@@ -4,6 +4,7 @@ import { CreateMemorizationDto } from '../dto/create-memorization.dto';
 import { Priority, Status, Memorization } from '@prisma/client';
 import { UpdateMemorizationDto } from '../dto/update-memorization.dto';
 import { UpdateItemProgressDto } from '../dto/update-item-progress.dto';
+import { AddMemorizationItemDto } from '../dto/add-memorization-item.dto';
 
 @Injectable()
 export class MemorizationService {
@@ -175,6 +176,9 @@ export class MemorizationService {
     async findOne(id: string) {
         const result = await this.prisma.memorization.findUnique({
             where: { id },
+            include: {
+                items: true
+            }
         });
         return result ? this.formatResponse(result) : null;
     }
@@ -232,6 +236,31 @@ export class MemorizationService {
             };
         } catch (error) {
             console.error('Error updating progress:', error);
+            throw error;
+        }
+    }
+
+    async addItem(memorizationId: string, data: AddMemorizationItemDto) {
+        try {
+            await this.prisma.memorizationItem.create({
+                data: {
+                    ...data,
+                    progress: 0,
+                    memorizationId
+                }
+            });
+    
+            // Fetch the updated memorization with all items
+            const result = await this.prisma.memorization.findUnique({
+                where: { id: memorizationId },
+                include: {
+                    items: true
+                }
+            });
+    
+            return this.formatResponse(result);
+        } catch (error) {
+            console.error('Error adding item:', error);
             throw error;
         }
     }

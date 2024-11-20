@@ -3,20 +3,21 @@ import { PrismaService } from '../../../prisma/services/prisma.service';
 import { CreateMemorizationDto } from '../dto/create-memorization.dto';
 import { Priority, Status, Memorization } from '@prisma/client';
 import { UpdateMemorizationDto } from '../dto/update-memorization.dto';
+import { UpdateItemProgressDto } from '../dto/update-item-progress.dto';
 
 @Injectable()
 export class MemorizationService {
     private static readonly TIMEZONE = 'Asia/Kuala_Lumpur';
-    
-    constructor(private prisma: PrismaService) {}
+
+    constructor(private prisma: PrismaService) { }
 
     private formatDateTime(date: Date | null): string | null {
         if (!date) return null;
-        
+
         // Convert UTC to KL time for display
         const klDate = new Date(date.getTime());
         klDate.setHours(klDate.getHours() + 8); // KL is UTC+8
-        
+
         return klDate.toLocaleString('en-GB', {
             day: '2-digit',
             month: '2-digit',
@@ -42,9 +43,19 @@ export class MemorizationService {
         ));
     }
 
-    private formatResponse(data: Memorization) {
+    private formatResponse(data: Memorization & { items?: any[] }) {
         return {
             ...data,
+            items: data.items?.map(item => ({
+                ...item,
+                progressRecords: item.progressRecords?.map(record => ({
+                    ...record,
+                    completedAt: record.completedAt ? this.formatDateTime(record.completedAt) : null,
+                    createdAt: this.formatDateTime(record.createdAt)
+                })),
+                createdAt: this.formatDateTime(item.createdAt),
+                updatedAt: this.formatDateTime(item.updatedAt)
+            })),
             startTime: data.startTime ? this.formatDateTime(data.startTime) : null,
             createdAt: this.formatDateTime(data.createdAt),
             updatedAt: this.formatDateTime(data.updatedAt)
@@ -60,16 +71,20 @@ export class MemorizationService {
                     startTime: data.status === Status.IN_PROGRESS ? currentTime : null,
                     status: data.status || Status.PENDING,
                     priority: data.priority || Priority.MEDIUM,
-                    progress: 0
+                    progress: 0,
+                    items: {
+                        create: data.items.map(item => ({
+                            ...item,
+                            progress: 0,
+                        }))
+                    }
                 },
+                include: {
+                    items: true
+                }
             });
 
-            return {
-                ...result,
-                startTime: result.startTime ? this.formatDateTime(result.startTime) : null,
-                createdAt: this.formatDateTime(result.createdAt),
-                updatedAt: this.formatDateTime(result.updatedAt)
-            };
+            return this.formatResponse(result);
         } catch (error) {
             console.error('Error creating memorization:', error);
             throw error;
@@ -82,7 +97,7 @@ export class MemorizationService {
             const results = await this.prisma.memorization.findMany({
                 orderBy: { createdAt: 'desc' },
             });
-            
+
             // Explicitly handle null startTime in the response
             return results.map(result => ({
                 ...result,
@@ -96,6 +111,67 @@ export class MemorizationService {
         }
     }
 
+    async updateItemProgress(itemId: string, data: UpdateItemProgressDto) {
+        const result = await this.prisma.$transaction(async (prisma) => {
+            // Create or update progress record
+            const progressRecord = await prisma.itemProgress.upsert({
+                where: {
+                    id: `${itemId}_${data.repetitionNumber}`, // Use a single unique identifier
+                },
+                create: {
+                    id: `${itemId}_${data.repetitionNumber}`, // Add this line
+                    itemId,
+                    ...data,
+                    completedAt: data.completed ? new Date() : null
+                },
+                update: {
+                    completed: data.completed,
+                    completedAt: data.completed ? new Date() : null
+                }
+            });
+
+            // Update item progress
+            const completedCount = await prisma.itemProgress.count({
+                where: {
+                    itemId,
+                    completed: true
+                }
+            });
+
+            const item = await prisma.memorizationItem.findUnique({
+                where: { id: itemId },
+                include: { memorization: true }
+            });
+
+            const progress = (completedCount / item.repetitionsRequired) * 100;
+
+            // Update item progress
+            await prisma.memorizationItem.update({
+                where: { id: itemId },
+                data: { progress }
+            });
+
+            // Update memorization overall progress
+            const items = await prisma.memorizationItem.findMany({
+                where: { memorizationId: item.memorizationId }
+            });
+
+            const overallProgress = items.reduce((acc, item) => acc + item.progress, 0) / items.length;
+
+            await prisma.memorization.update({
+                where: { id: item.memorizationId },
+                data: {
+                    progress: overallProgress,
+                    status: overallProgress === 100 ? Status.COMPLETED : Status.IN_PROGRESS
+                }
+            });
+
+            return progressRecord;
+        });
+
+        return result;
+    }
+
     async findOne(id: string) {
         const result = await this.prisma.memorization.findUnique({
             where: { id },
@@ -107,7 +183,11 @@ export class MemorizationService {
         const result = await this.prisma.memorization.update({
             where: { id },
             data,
+            include: {
+                items: true
+            }
         });
+        
         return this.formatResponse(result);
     }
 
@@ -129,11 +209,11 @@ export class MemorizationService {
             const memorization = await this.prisma.memorization.findUnique({
                 where: { id }
             });
-    
+
             // Only set startTime if it's null and the status is changing to IN_PROGRESS
-            const startTime = memorization.startTime || 
+            const startTime = memorization.startTime ||
                 (progress > 0 && progress < 100 ? currentTime : null);
-    
+
             const result = await this.prisma.memorization.update({
                 where: { id },
                 data: {
@@ -143,7 +223,7 @@ export class MemorizationService {
                     updatedAt: currentTime
                 },
             });
-    
+
             return {
                 ...result,
                 startTime: result.startTime ? this.formatDateTime(result.startTime) : null,

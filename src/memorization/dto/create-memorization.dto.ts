@@ -1,5 +1,7 @@
-import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsOptional, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { Status, Priority } from '@prisma/client';
+import { CreateMemorizationItemDto } from './create-memorization-item.dto';
 
 export class CreateMemorizationDto {
   @IsString()
@@ -17,4 +19,9 @@ export class CreateMemorizationDto {
   @IsEnum(Priority)
   @IsOptional()
   priority?: Priority;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateMemorizationItemDto)
+  items: CreateMemorizationItemDto[];
 }

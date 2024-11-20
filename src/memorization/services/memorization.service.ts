@@ -177,7 +177,11 @@ export class MemorizationService {
         const result = await this.prisma.memorization.findUnique({
             where: { id },
             include: {
-                items: true
+                items: {
+                    include: {
+                        progressRecords: true
+                    }
+                }
             }
         });
         return result ? this.formatResponse(result) : null;
